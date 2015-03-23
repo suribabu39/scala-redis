@@ -16,8 +16,18 @@ trait StringOperations { self: Redis =>
   // PX milliseconds -- Set the specified expire time, in milliseconds.
   // NX -- Only set the key if it does not already exist.
   // XX -- Only set the key if it already exist.
+  @deprecated("Use the more typesafe variant", "2.14")
   def set(key: Any, value: Any, nxxx: Any, expx: Any, time: Long): Boolean = {
     send("SET", List(key, value, nxxx, expx, time))(asBoolean)
+  }
+
+  def set(key: Any, value: Any, onlyIfExists: Boolean, time: SecondsOrMillis): Boolean = {
+    val nxxx = if (onlyIfExists) "XX" else "NX"
+    val expx = time match {
+      case Seconds(v) => List("EX", v)
+      case Millis(v) => List("PX", v)
+    }
+    send("SET", List(key, value, nxxx) ++ expx)(asBoolean)
   }
 
   // GET (key)
@@ -35,8 +45,11 @@ trait StringOperations { self: Redis =>
   def setnx(key: Any, value: Any)(implicit format: Format): Boolean =
     send("SETNX", List(key, value))(asBoolean)
 
-  def setex(key: Any, expiry: Int, value: Any)(implicit format: Format): Boolean =
+  def setex(key: Any, expiry: Long, value: Any)(implicit format: Format): Boolean =
     send("SETEX", List(key, expiry, value))(asBoolean)
+
+  def psetex(key: Any, expiryInMillis: Long, value: Any)(implicit format: Format): Boolean =
+    send("PSETEX", List(key, expiryInMillis, value))(asBoolean)
 
   // INCR (key)
   // increments the specified key by 1

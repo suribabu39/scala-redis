@@ -45,24 +45,40 @@ with BeforeAndAfterAll {
     }
   }
 
+  describe("set if exists or not") {
+    it("should set key/value pairs with exclusiveness and expire") {
+      r.set("amit-1", "mor", false, Seconds(6))
+      r.get("amit-1") match {
+        case Some(s: String) => s should equal("mor")
+        case None => fail("should return mor")
+      }
+      Thread.sleep(6000)
+      r.get("amit-1") should equal(None)
+      r.del("amit-1")
+    }
+  }
+
   describe("fail to set if doesn't exist; succeed later because key doesn't exist; success later because key exists") {
     it("should fail to set key/value pairs with exclusiveness and expire") {
       r.del("amit-1")
       // first trying to set with 'xx' should fail since there is not key present
-      r.set("amit-1", "mor", "xx","ex",6)
+      // r.set("amit-1", "mor", "xx","ex",6)
+      r.set("amit-1", "mor", true, Seconds(6))
       r.get("amit-1") match {
         case Some(s: String) => fail("should return None")
         case None =>
       }
       // second, we set if there is no key and we should succeed
-      r.set("amit-1", "mor", "nx","ex",6)
+      // r.set("amit-1", "mor", "nx","ex",6)
+      r.set("amit-1", "mor", false, Seconds(6))
       r.get("amit-1") match {
         case Some(s: String) => s should equal("mor")
         case None => fail("should return mor")
       }
 
       // third, since the key is now present (if second succeeded), this would succeed too
-      r.set("amit-1", "mor", "xx","ex",6)
+      // r.set("amit-1", "mor", "xx","ex",6)
+      r.set("amit-1", "mor", true, Seconds(6))
       r.get("amit-1") match {
         case Some(s: String) => s should equal("mor")
         case None => fail("should return mor")
