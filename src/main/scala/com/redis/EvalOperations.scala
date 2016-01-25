@@ -1,13 +1,16 @@
 package com.redis
 
 import serialization._
+import Parse.{Implicits => Parsers}
 
 trait EvalOperations { self: Redis =>
 
   // EVAL
   // evaluates lua code on the server.
-  def evalMultiBulk[A](luaCode: String, keys: List[Any], args: List[Any])(implicit format: Format, parse: Parse[A]): Option[List[Option[A]]] =
+  def evalMultiBulk[A](luaCode: String, keys: List[Any], args: List[Any])
+    (implicit format: Format, parse: Parse[A]): Option[List[Option[A]]] = {
     send("EVAL",  argsForEval(luaCode, keys, args))(asList[A])
+  }
 
   def evalBulk[A](luaCode: String, keys: List[Any], args: List[Any])(implicit format: Format, parse: Parse[A]): Option[A] =
     send("EVAL", argsForEval(luaCode, keys, args))(asBulk)
@@ -15,9 +18,15 @@ trait EvalOperations { self: Redis =>
   def evalMultiSHA[A](shahash: String, keys: List[Any], args: List[Any])(implicit format: Format, parse: Parse[A]): Option[List[Option[A]]] =
     send("EVALSHA", argsForEval(shahash, keys, args))(asList[A])
     
-  def evalSHA[A](shahash: String, keys: List[Any], args: List[Any])(implicit format: Format, parse: Parse[A]): Option[A] =
-    send("EVALSHA", argsForEval(shahash, keys, args))(asAny.asInstanceOf[Option[A]])
-  
+  def evalSHA(shahash: String, keys: List[Any], args: List[Any]): Option[Any] = 
+    send("EVALSHA", argsForEval(shahash, keys, args))(receive(bulkOrIntReply) match {
+      case Right(Some(s)) => Some(Parsers.parseString(s))
+      // Lua boolean false will return None
+      case Right(None) => Some(0)
+      case Left(Some(i)) => Some(i)
+      case Left(None) => Some(0)
+    })
+
   def scriptLoad(luaCode: String): Option[String] = {
     send("SCRIPT", List("LOAD", luaCode))(asBulk)
   }

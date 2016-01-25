@@ -38,6 +38,7 @@ case class RedisMultiExecException(message: String) extends RuntimeException(mes
 private [redis] trait Reply {
 
   type Reply[T] = PartialFunction[(Char, Array[Byte]), T]
+  type IntReply = Reply[Option[Int]]
   type SingleReply = Reply[Option[Array[Byte]]]
   type MultiReply = Reply[Option[List[Option[Array[Byte]]]]]
   type PairReply = Reply[Option[(Option[Array[Byte]], Option[List[Option[Array[Byte]]]])]]
@@ -71,6 +72,19 @@ private [redis] trait Reply {
         }
       }
   }
+
+  val bulkOrIntReply: Reply[Either[Option[Int], Option[Array[Byte]]]] = {
+    case (BULK, s) => 
+      Parsers.parseInt(s) match {
+        case -1 => Right(None)
+        case l => {
+          val str = readCounted(l)
+          val ignore = readLine // trailing newline
+          Right(Some(str))
+        }
+      }
+    case (INT, s) => Left(Some(Parsers.parseInt(s)))
+  } 
 
   val multiBulkReply: MultiReply = {
     case (MULTI, str) =>
@@ -107,14 +121,17 @@ private [redis] trait Reply {
 
   def queuedReplyInt: Reply[Option[Int]] = {
     case (SINGLE, QUEUED) => Some(Int.MaxValue)
+    case _ => None
   }
   
   def queuedReplyLong: Reply[Option[Long]] = {
     case (SINGLE, QUEUED) => Some(Long.MaxValue)
-    }
+    case _ => None
+  }
 
   def queuedReplyList: MultiReply = {
     case (SINGLE, QUEUED) => Some(List(Some(QUEUED)))
+    case _ => None
   }
 
   def receive[T](pf: Reply[T]): T = readLine match {

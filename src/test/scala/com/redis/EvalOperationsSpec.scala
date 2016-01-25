@@ -78,7 +78,8 @@ class EvalOperationsSpec extends FunSpec
     it("should evalsha lua code hash and return the integer result") {
       import serialization.Parse.Implicits.parseInt
       val sha = r.scriptLoad("return 1").get
-      val i: Option[Int] = r.evalSHA(sha, List(), List())
+      // val i: Option[Int] = r.evalSHA(sha, List(), List())
+      val i = r.evalSHA(sha, List(), List())
       i should equal (Some(1))
     }
     it("should evalsha lua code hash and return the integer part of a double result") {
@@ -92,7 +93,8 @@ class EvalOperationsSpec extends FunSpec
        */
       import serialization.Parse.Implicits.parseDouble
       val sha = r.scriptLoad("return 1.5").get
-      val i: Option[Double] = r.evalSHA(sha, List(), List())
+      // val i: Option[Double] = r.evalSHA(sha, List(), List())
+      val i = r.evalSHA(sha, List(), List())
       i should equal (Some(1))
     }
     it("should evalmultisha lua code hash and return the string results") {
