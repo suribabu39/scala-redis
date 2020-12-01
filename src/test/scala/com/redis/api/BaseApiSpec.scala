@@ -18,6 +18,7 @@ trait BaseApiSpec extends FunSpec
   dbsize()
   del()
   exists()
+  vexists()
   expire()
   getConfig()
   getType()
@@ -127,6 +128,19 @@ trait BaseApiSpec extends FunSpec
       r.exists("anshin-2") should equal(true)
       r.exists("anshin-1") should equal(true)
       r.exists("anshin-3") should equal(false)
+    }
+  }
+  }
+
+  protected def vexists(): Unit = {
+  describe("vexists") {
+    it("should give") {
+      r.set("anshin-1", "debasish")
+      r.set("anshin-2", "maulindu")
+      r.vexists("anshin-2").get should equal(1)
+      r.vexists("anshin-1", "anshin-2").get should equal(2)
+      r.vexists("anshin-1", "anshin-1", "anshin-2").get should equal(3)
+      r.vexists("anshin-3").get should equal(0)
     }
   }
   }

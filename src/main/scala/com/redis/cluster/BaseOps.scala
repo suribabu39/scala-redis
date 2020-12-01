@@ -57,6 +57,9 @@ trait BaseOps extends BaseApi {
   override def exists(key: Any)(implicit format: Format): Boolean =
     processForKey(key)(_.exists(key))
 
+  override def vexists(key: Any, keys: Any*)(implicit format: Format): Option[Long] =
+    processForKey(key)(_.vexists(key, keys: _*))
+
   override def del(key: Any, keys: Any*)(implicit format: Format): Option[Long] = Some {
     (key :: keys.toList)
       .groupBy(nodeForKey)

@@ -68,6 +68,9 @@ trait BaseOperations extends BaseApi {
   override def exists(key: Any)(implicit format: Format): Boolean =
     send("EXISTS", List(key))(asBoolean)
 
+  override def vexists(key: Any, keys: Any*)(implicit format: Format): Option[Long] =
+    send("EXISTS", key :: keys.toList)(asLong)
+
   override def del(key: Any, keys: Any*)(implicit format: Format): Option[Long] =
     send("DEL", key :: keys.toList)(asLong)
 

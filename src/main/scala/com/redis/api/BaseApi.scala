@@ -62,6 +62,11 @@ trait BaseApi {
   def exists(key: Any)(implicit format: Format): Boolean
 
   /**
+   * returns the total number of keys existing. (since 3.0.3)
+   */
+  def vexists(key: Any, keys: Any*)(implicit format: Format): Option[Long]
+
+  /**
    * deletes the specified keys.
    */
   def del(key: Any, keys: Any*)(implicit format: Format): Option[Long]
