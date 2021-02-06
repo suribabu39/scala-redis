@@ -6,14 +6,6 @@ import javax.net.ssl.SSLContext
 import com.redis.serialization.Format
 
 object RedisClient {
-  sealed trait SortOrder
-  case object ASC extends SortOrder
-  case object DESC extends SortOrder
-
-  sealed trait Aggregate
-  case object SUM extends Aggregate
-  case object MIN extends Aggregate
-  case object MAX extends Aggregate
 
   private def extractDatabaseNumber(connectionUri: java.net.URI): Int = {
     Option(connectionUri.getPath).map(path =>
@@ -59,16 +51,7 @@ trait Redis extends IO with Protocol {
 
 trait RedisCommand extends Redis
   with BaseOperations
-  with GeoOperations
-  with NodeOperations
   with StringOperations
-  with ListOperations
-  with SetOperations
-  with SortedSetOperations
-  with HashOperations
-  with EvalOperations
-  with PubOperations
-  with HyperLogLogOperations
   with AutoCloseable {
 
   val database: Int = 0
@@ -95,7 +78,7 @@ trait RedisCommand extends Redis
 
 class RedisClient(override val host: String, override val port: Int,
     override val database: Int = 0, override val secret: Option[Any] = None, override val timeout : Int = 0, override val sslContext: Option[SSLContext] = None)
-  extends RedisCommand with PubSub {
+  extends RedisCommand {
 
   def this() = this("localhost", 6379)
   def this(connectionUri: java.net.URI) = this(
@@ -179,7 +162,7 @@ class RedisClient(override val host: String, override val port: Int,
     ps
   }
 
-  class PipelineClient(parent: RedisClient) extends RedisCommand with PubOperations {
+  class PipelineClient(parent: RedisClient) extends RedisCommand {
     import com.redis.serialization.Parse
 
     var handlers: Vector[() => Any] = Vector.empty

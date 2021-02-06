@@ -13,15 +13,7 @@ class RedisCluster(
   extends RedisClusterOps
     with WithHashRing[IdentifiableRedisClientPool]
     with BaseOps
-    with NodeOps
-    with StringOps
-    with ListOps
-    with SetOps
-    with SortedSetOps
-    // with GeoOps todo: implement GeoApi
-    with EvalOps
-    // with HyperLogLogOps todo: implement HyperLogLogApi
-    with HashOps {
+    with StringOps {
 
   // instantiating a cluster will automatically connect participating nodes to the server
   protected[cluster] val clients: List[IdentifiableRedisClientPool] = hosts.map { h =>
