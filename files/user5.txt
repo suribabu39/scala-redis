@@ -1,0 +1,11 @@
+USE abc
+SET key1000 1
+SET key2000 2
+USE node2
+EXPIRE a 1
+EXPIRE key1000 -1
+SET key3000 va3000
+USE node3
+GET key2000
+GET key31
+GET 1

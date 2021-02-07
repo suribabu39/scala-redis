@@ -1,60 +1,56 @@
 package com.redis
 
-import java.net.SocketException
-import javax.net.ssl.SSLContext
+import com.redis.api.{BaseOperations, StringOperations}
 
+import java.net.SocketException
 import com.redis.serialization.Format
 
-object RedisClient {
-
-}
 
 trait Redis extends IO with Protocol {
 
-  def send[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A = try {
-    write(Commands.multiBulk(command.getBytes("UTF-8") +: (args map (format.apply))))
-    result
-  } catch {
-    case e: RedisConnectionException =>
-      if (disconnect) send(command, args)(result)
-      else throw e
-    case e: SocketException =>
-      if (disconnect) send(command, args)(result)
-      else throw e
+  def retry[A](command: String, extraArgs: Option[Seq[Any]] = None) (result: => A)(implicit format: Format): A = {
+    extraArgs match {
+      case Some(args) => send(command, Some(args))(result)
+      case None => send(command)(result)
+    }
   }
 
-  def send[A](command: String)(result: => A): A = try {
-    write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
-    result
-  } catch {
-    case e: RedisConnectionException =>
-      if (disconnect) send(command)(result)
-      else throw e
-    case e: SocketException =>
-      if (disconnect) send(command)(result)
-      else throw e
+  def send[A](command: String, extraArgs: Option[Seq[Any]] = None)(result: => A)(implicit format: Format): A = {
+    try {
+      extraArgs match {
+        case Some(args) =>
+          write(Commands.multiBulk(command.getBytes("UTF-8") +: (args map (format.apply))))
+          result
+        case None =>
+          write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
+          result
+      }
+    } catch {
+      case e: RedisConnectionException =>
+        if (disconnect) retry(command, extraArgs) (result) else throw e
+      case e: SocketException =>
+        if (disconnect) retry(command, extraArgs) (result) else throw e
+      case e: Throwable =>
+        throw e
+    }
   }
 }
 
-trait RedisCommand extends Redis
+
+class RedisClient(override val name: String, override val host: String, override val port: Int)
+  extends Redis
   with BaseOperations
   with StringOperations
   with AutoCloseable {
 
+  def getName = name
   val database: Int = 0
   val secret: Option[Any] = None
-
   override def onConnect: Unit = {}
 
-}
-
-
-class RedisClient(override val host: String, override val port: Int,
-    override val database: Int = 0, override val secret: Option[Any] = None, override val timeout : Int = 0, override val sslContext: Option[SSLContext] = None)
-  extends RedisCommand {
-
-  def this() = this("localhost", 6379)
+  def this() = this("sample-node", "localhost", 6379)
   def this(connectionUri: java.net.URI) = this(
+    name = "sample-node",
     host = connectionUri.getHost,
     port = connectionUri.getPort
   )

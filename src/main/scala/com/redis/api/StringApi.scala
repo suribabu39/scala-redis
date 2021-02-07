@@ -1,6 +1,6 @@
 package com.redis.api
 
-import com.redis.SecondsOrMillis
+//import com.redis.SecondsOrMillis
 import com.redis.api.StringApi.{Always, NX, SetBehaviour, XX}
 import com.redis.serialization.{Format, Parse}
 

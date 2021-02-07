@@ -4,12 +4,11 @@ import java.io._
 import java.net.{InetSocketAddress, Socket, SocketTimeoutException}
 import javax.net.ssl.SSLContext
 
-import com.redis.serialization.Parse.parseStringSafe
-
-trait IO extends Log {
+trait IO {
+  val name: String
   val host: String
   val port: Int
-  val timeout: Int
+  val timeout: Int =  0
 
   val sslContext: Option[SSLContext] = None
 
@@ -74,7 +73,6 @@ trait IO extends Log {
 
   // Writes data to a socket using the specified block.
   def write(data: Array[Byte]): Unit = {
-    ifDebug("C: " + parseStringSafe(data))
     if (!connected) connect
     write_to_socket(data){ os =>
       try {

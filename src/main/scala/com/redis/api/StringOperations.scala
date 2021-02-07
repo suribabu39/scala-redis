@@ -1,8 +1,8 @@
-package com.redis
+package com.redis.api
 
-import com.redis.api.StringApi
+import com.redis.Redis
 import com.redis.api.StringApi.{Always, SetBehaviour}
-import com.redis.serialization._
+import com.redis.serialization.{Format, Parse}
 
 import scala.concurrent.duration.Duration
 
@@ -17,9 +17,9 @@ trait StringOperations extends StringApi {
       List.empty
     }
     val cmd = List(key, value) ::: expireCmd ::: whenSet.command
-    send("SET", cmd)(asBoolean)
+    send("SET", Some(cmd))(asBoolean)
   }
 
   override def get[A](key: Any)(implicit format: Format, parse: Parse[A]): Option[A] =
-    send("GET", List(key))(asBulk)
+    send("GET", Some(List(key)))(asBulk)
 }

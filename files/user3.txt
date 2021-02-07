@@ -1,0 +1,10 @@
+USE node1
+SET key1000 value1000
+SET key2000 2000
+USE node2
+EXPIRE key1000 1
+SET key3000 value3000
+USE node3
+GET key2000
+GET key3001
+GET key1000
