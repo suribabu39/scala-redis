@@ -8,7 +8,9 @@ object Main {
   def main(args: Array[String]): Unit = {
 
     val inputDir = System.getProperty("inputDir", "files/")
-    val poolSize = System.getProperty("users", "2").toInt
+    val poolSize = System.getProperty("concurrency", "2").toInt
+    if (poolSize <= 0 )
+      throw new Exception("Invalid concurrency, should be a positive number")
     val files = FileUtils.getListOfFiles(inputDir)
     println(s"Num of users/files - $files")
 
